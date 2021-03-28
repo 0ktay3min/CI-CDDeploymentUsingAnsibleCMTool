@@ -1,0 +1,70 @@
+---
+- hosts: webserver
+
+  become: yes
+  become_method: sudo
+  remote_user: node
+
+  tasks:
+  - name: Update and upgrade apt packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+      cache_valid_time: 86400 #One day
+
+  - name: install JDK 8
+    apt:
+      name: openjdk-8-jre-headless
+      state: present
+
+  - name: Setting Default Java
+    alternatives:
+      name: java
+      link: /usr/bin/java
+      path: /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
+
+  - name: add tomcat group
+    group:
+      name: tomcat
+      state: present
+
+  - name: add tomcat user
+    user:
+      name: tomcat
+      group: tomcat
+      state: present
+      home: /user/share/tomcat
+      createhome: no
+
+
+  - name: create /opt/tomcat directory
+    file:
+      path: /opt/tomcat
+      state: directory
+      mode: 0755
+
+  - name: download & unarchive
+    unarchive:
+      src: https://mirrors.ocf.berkeley.edu/apache/tomcat/tomcat-9/v9.0.44/bin/apache-tomcat-9.0.44.tar.gz
+      dest: /opt/tomcat
+      remote_src: yes
+      extra_opts: [--strip-components=1]
+
+  - name: Change ownership
+    file:
+      path: /opt/tomcat
+      owner: tomcat
+      group: tomcat
+      mode: "u+rwx,g+rx,o=rx"
+      recurse: yes
+      state: directory
+
+  - name: Start and enable Tomcat service
+    systemd:
+      name: tomcat
+      state: started
+      enabled: true
+      daemon_reload: true
+
+  - name: Copy artifacts to tomcat server
+    copy: src=./target/LoginWebApp-1.war dest=/opt/tomcat/webapps

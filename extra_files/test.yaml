@@ -1,0 +1,12 @@
+---
+- hosts: tomcat
+  gather_facts: true
+  become: yes
+  tasks:
+    - name: Install Java 1.8
+       apt: 
+    - name: Install Tomcat 9 on Ubuntu
+       become: yes
+       apt: pkg={{ item }} state=latest update_cache=yes cache_valid_time=3600
+       with_items:
+        - tomcat9

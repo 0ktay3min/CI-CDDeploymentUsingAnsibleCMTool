@@ -1,0 +1,2 @@
+[webserver]
+192.168.1.85 ansible_python_interpreter=/usr/bin/python2 ansible_user=node
